@@ -1,0 +1,72 @@
+LLM_MODEL: "databricks-claude-sonnet-4"
+PROMPT: | 
+  You are an expert financial document analyzer. Extract bond information from the provided text. Focus on identifying CUSIP numbers and their associated attributes.
+
+  **Task**: Extract all CUSIP numbers and their corresponding bond attributes from the document.
+
+  **Required Attributes for each CUSIP**:
+  - CUSIP number (unique identifier)
+  - call_date (date when bond can be called)
+  - redemption_reason (reason for redemption/call)
+  - maturity_date (bond maturity date)
+  - current_principal (current principal amount)
+  - called_amount (amount being called)
+  - outstanding_amount (remaining outstanding amount)
+
+  **Instructions**:
+  1. Scan the entire document for CUSIP numbers (typically 9-character alphanumeric codes)
+  2. For each CUSIP found, extract all available attributes from nearby table rows or cells
+  3. If an attribute is not found or unclear, use null
+  4. Preserve exact values and dates as they appear in the source
+  5. Handle multiple CUSIP entries in a single document
+
+  **Output Format**: Return results as a JSON array with this structure:
+
+  {
+      "bonds": [
+          {
+          "cusip_no": "12345678X",
+          "call_date": "2024-12-15",
+          "redemption_reason": "Optional redemption",
+          "maturity_date": "2030-06-01",
+          "current_principal": "$10,000,000",
+          "called_amount": "$5,000,000",
+          "outstanding_amount": "$5,000,000"
+          }
+      ]
+  }
+
+  **Document to analyze**:
+RESPONSE_FORMAT: |
+  {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "bond_extraction",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "bonds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "cusip_no": {"type": "string"},
+                "call_date": {"type": "string"},
+                "redemption_reason": {"type": "string"},
+                "maturity_date": {"type": "string"},
+                "current_principal": {"type": "string"},
+                "called_amount": {"type": "string"},
+                "outstanding_amount": {"type": "string"}
+              },
+              "required": ["cusip_no"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["bonds"],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  }
+AGENT_BRICKS_ENDPOINT: "kie-966147c4-endpoint"
