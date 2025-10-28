@@ -190,3 +190,7 @@ mlartifacts/
 
 # cursor
 .cursor/
+
+# raw data
+pdfs/
+jsonl/

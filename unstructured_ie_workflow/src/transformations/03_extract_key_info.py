@@ -140,15 +140,32 @@ print(f"🔢 Records in {table_name}: {table_count}")
 if table_count > 0:
     # Use batch processing to write JSONL files (more reliable than streaming for file output)
     print("📊 Reading data from Delta table...")
-    df_batch = spark.table(table_name).select("extracted_entities").filter(col("extracted_entities").isNotNull())
-    
+    from pyspark.sql.functions import regexp_extract, to_json, struct
+
+    df_batch = (
+        spark.table(table_name)
+        .select("path", "extracted_entities")
+        .filter(col("extracted_entities").isNotNull())
+        .withColumn(
+            "file_name",
+            regexp_extract(col("path"), r"([^/]+)$", 1)
+        )
+        .withColumn(
+            "output_json",
+            to_json(struct(
+                col("file_name").alias("file_name"),
+                col("extracted_entities").alias("extracted_entities")
+            ))
+        )
+    )
+
     # Write as text files with .jsonl in the path name
     jsonl_output_path = f"{output_volume_path}/extracted_entities"
     print(f"💾 Writing JSONL to: {jsonl_output_path}")
-    
+
     # Write each JSON string as a separate line (coalesce to single file)
-    df_batch.select("extracted_entities").coalesce(1).write.mode("overwrite").text(jsonl_output_path)
-    
+    df_batch.select("output_json").coalesce(1).write.mode("overwrite").text(jsonl_output_path)
+
     print("✅ JSONL export completed successfully!")
     print(f"📄 JSONL files saved to: {jsonl_output_path}")
 else:
