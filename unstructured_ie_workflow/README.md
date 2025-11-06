@@ -207,8 +207,7 @@ The included notebook visualizes parsing results with interactive bounding boxes
 ```
 .
 ├── databricks.yml                      # Bundle configuration
-├── run_workflow.sh                     # Enhanced workflow runner (recommended)
-├── run_workflow.py                     # Python alternative (deprecated)
+├── run_workflow.sh                     # Enhanced workflow runner with file management
 ├── resources/
 │   └── ai_parse_document_workflow.job.yml  # Job definition
 ├── src/

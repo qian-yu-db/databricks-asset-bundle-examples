@@ -1,0 +1,146 @@
+resources:
+  jobs:
+    unstructured_document_knowledge_base_workflow:
+      name: unstructured_document_knowledge_base_workflow
+
+      environments:
+        - environment_key: serverless_env
+          spec:
+            client: "3"
+
+      tasks:
+        - task_key: clean_pipeline_tables
+          environment_key: serverless_env
+          notebook_task:
+            notebook_path: ../src/transformations/00-clean-pipeline-tables.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              output_volume_path: ${var.output_volume_path}
+              clean_pipeline_tables: ${var.clean_pipeline_tables}
+              checkpoint_base_path: ${var.checkpoint_base_path}
+              raw_table_name: ${var.raw_table_name}
+              content_table_name: ${var.content_table_name}
+              elements_table_name: ${var.elements_table_name}
+              pages_table_name: ${var.pages_table_name}
+              cropped_images_table_name: ${var.cropped_images_table_name}
+              chunked_content_table_name: ${var.chunked_content_table_name}
+              content_enriched_table_name: ${var.content_enriched_table_name}
+              structured_table_name: ${var.structured_table_name}
+
+        - task_key: parse_documents
+          environment_key: serverless_env
+          depends_on:
+            - task_key: clean_pipeline_tables
+          notebook_task:
+            notebook_path: ../src/transformations/01_parse_documents.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              source_volume_path: ${var.source_volume_path}
+              output_volume_path: ${var.output_volume_path}
+              checkpoint_location: ${var.checkpoint_base_path}/01_parse_documents
+              table_name: ${var.raw_table_name}
+
+        - task_key: extract_content
+          depends_on:
+            - task_key: parse_documents
+          environment_key: serverless_env
+          notebook_task:
+            notebook_path: ../src/transformations/02_1_extract_document_content.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              checkpoint_location: ${var.checkpoint_base_path}/02_1_extract_document_content
+              source_table_name: ${var.raw_table_name}
+              table_name: ${var.content_table_name}
+
+        - task_key: extract_elements
+          depends_on:
+            - task_key: parse_documents
+          environment_key: serverless_env
+          notebook_task:
+            notebook_path: ../src/transformations/02_2_extract_document_elements.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              checkpoint_location: ${var.checkpoint_base_path}/02_2_extract_document_elements
+              source_table_name: ${var.raw_table_name}
+              table_name: ${var.elements_table_name}
+
+        - task_key: extract_pages
+          depends_on:
+            - task_key: parse_documents
+          environment_key: serverless_env
+          notebook_task:
+            notebook_path: ../src/transformations/02_3_extract_document_pages.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              checkpoint_location: ${var.checkpoint_base_path}/02_3_extract_document_pages
+              source_table_name: ${var.raw_table_name}
+              table_name: ${var.pages_table_name}
+
+        - task_key: crop_selected_diagrams
+          depends_on:
+            - task_key: extract_elements
+            - task_key: extract_pages
+          environment_key: serverless_env
+          notebook_task:
+            notebook_path: ../src/transformations/03_1_crop_diagrams.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              checkpoint_location: ${var.checkpoint_base_path}/03_1_crop_diagrams
+              source_table_name1: ${var.elements_table_name}
+              source_table_name2: ${var.pages_table_name}
+              table_name: ${var.cropped_images_table_name}
+
+        - task_key: chunked_document_content
+          depends_on:
+            - task_key: extract_elements
+          environment_key: serverless_env
+          notebook_task:
+            notebook_path: ../src/transformations/03_2_chunked_document_content.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              checkpoint_location: ${var.checkpoint_base_path}/03_2_chunked_document_content
+              source_table_name: ${var.elements_table_name}
+              table_name: ${var.chunked_content_table_name}
+
+        - task_key: extract_info_from_cropped_diagrams
+          depends_on:
+            - task_key: crop_selected_diagrams
+            - task_key: extract_elements
+          environment_key: serverless_env
+          notebook_task:
+            notebook_path: ../src/transformations/04_1_extract_info_from_cropped_diagrams.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              checkpoint_location: ${var.checkpoint_base_path}/04_1_extract_info_from_cropped_diagrams
+              source_table_name1: ${var.cropped_images_table_name}
+              source_table_name2: ${var.elements_table_name}
+              table_name: ${var.content_enriched_table_name}
+
+        - task_key: extract_structured_data
+          depends_on:
+            - task_key: extract_info_from_cropped_diagrams
+          environment_key: serverless_env
+          notebook_task:
+            notebook_path: ../src/transformations/04_2_extract_key_info.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              checkpoint_location: ${var.checkpoint_base_path}/04_2_extract_key_info
+              agent_choice: ${var.agent_choice}
+              source_table_name: ${var.content_enriched_table_name}
+              table_name: ${var.structured_table_name}
+
+      max_concurrent_runs: 1
+
+      # Optional: Add a schedule
+      # schedule:
+      #   quartz_cron_expression: "0 0 * * * ?"
+      #   timezone_id: "UTC"

@@ -1,0 +1,182 @@
+LLM_MODEL: "databricks-claude-sonnet-4"
+PROMPT: | 
+  You are an expert electronics engineer and technical documentation analyst specializing in electronic component datasheets. Your task is to extract key information from the provided datasheet text, HTML tables, and image descriptions, and output it in a structured JSON format.
+  
+  # Task
+  Analyze the datasheet and extract the following information:
+  
+  ## Part Information:
+  - **generic_part_number**: An alternative reference number for the component that may be used across different systems or catalogs. Group of parts with unique and standardized general functionality. It can be the same or different from part number
+  - **part_number**: A number provided by the manufacturer which uniquely identifies a specific product/component for specific application, functionality and physical appearance
+  - **manufacturer_name**: The legal name of the company that produces the component
+  - **manufacturer_part_description**: A brief description of the component type that identifies its primary function, as specified by the manufacturer
+  - **eu_rohs_compliant**: A binary indicator where 1 signifies RoHS compliance, 0 indicates non-compliance. If no information exists, return null
+  - **category**: The product classification that groups similar components based on their function or application area
+    
+    Available categories include: FRAMs, FF/Latches, Delay Lines, OTP ROMs, Duplexers, Other Fiber Optic Connectors, Keylock Switches, ATM/SONET/SDH ICs, Reflective Object Sensors, Audio Control ICs, Other Converters, Bus Controllers, Silicon Controlled Rectifiers, Multiway Rack and Panel Connectors, RF Blindmate Connectors, Voltage Controlled Oscillators, RF/Microwave Isolator/Circulators, Gates, Photo ICs, Mains Filters, SRAMs, Analog Computational Functions, Field Programmable Gate Arrays, Pressure Sensors, Bushings, Other Logic ICs, RF SC Connectors, Operational Amplifiers, Fiber Optic Add/Drop Mux/Demux, Cavity Filters, Rotary Position Sensors, Digital to Analog Converters, RF/Microwave Frequency Multipliers, Digital Transmission Controllers, Dielectric Resonators, Adjustable Negative Single Output LDO Regulators, Washers, Telecom Switching Circuits, Wires and Cables, Voltage Multiplier Diodes, Rivets, Fiber Optic Circulator/Isolators, Combination Line Connectors, Audio/Video Amplifiers, FIFOs, Constant Voltage Transformers, Mains Power Connectors, Pushbutton Switches, Assembly Items, Superimposer ICs, Other Switches, Other RF/Microwave Devices, Telecom Encryption Circuits, RF TNC Connectors, Fixed Gunn Oscillators, Other Interconnects, Power Management Circuits, Voltage Controlled Sine SAW/STW Oscillators, Other Circular Connectors, DC Power Plugs or Jacks, OCXO, Clock, Adjustable Positive Multiple Output LDO Regulators, Fixed/Adjustable Positive Single Output Standard Regulators, Fiber Optic Adapters, Other Sensors/Transducers, RF SMA/SSMA Connectors, Telecom Transformers, RF/Microwave Phase Shifters, RF Adapters, Display Controllers, Pulse/Datacom Transformers, Prescaler/Multivibrators, Fixed Positive Multiple Output Standard Regulators, Fixed/Adjustable Positive Multiple Output Standard Regulators, Visible LEDs, Studs, VCXO, Sine, Variable Resistors, Photo Resistives, Screws, Fixed/Adjustable Positive Multiple Output LDO Regulators, Auto Transformers, Telephone Circuits, TCVCXO, Clock, Fixed Resistors, Remote Control ICs, Knobs, Time Delay Relays, Counters, DIN Connectors, Breakover Diodes, Fiber Optic Emitters, Laser Diodes, Active Filters, RF Relays, OCVCXO, Sine, Other Transistors, Bus Terminators, Snap Acting/Limit Switches, Multiplexers or Switches, Posts, MRAMs, SHV Connectors, Photo Trigger Devices, Reference Design, Pins, Adjustable Negative Single Output Standard Regulators, Zener Diodes, DIACs, Fans/Blowers, Shift Registers, Infrared LEDs, Small Signal Field-Effect Transistors, Modems, Adjustable Positive Single Output Standard Regulators, Clock Generators, Snaps, Fixed Inductors, Multifunction Peripherals, Fiber Optic Networking Connectors, Bit-Slice Processors, SAW Resonators, Optocoupler - IC Outputs, Variacs, Proximity Sensors, Audio/RCA Connectors, Fixed/Adjustable Positive Single Output LDO Regulators, Tools and Machinery, Other Semiconductors, OCVCXO, Clock, Digital Transmission Support, Thumb/Pushwheel Switches, Serial IO/Communication Controllers, Circuit Breaker, Bridge Rectifier Diodes, Drive Electronics, Fixed Sine SAW/STW Oscillators, Fiber Optic Splitter/Couplers, Other uPs/uCs/Peripheral ICs, Nut Plates, Pins, Level Translators, Reed Relays, Audio Transformers, Paging Circuits, Quartz Crystals, TRIACs, Studs, Photovoltaic Cells, Other Regulators, Line Driver or Receivers, PCB Adapters, Adjustable Mixed Multiple Output Standard Regulators, Buffer Amplifiers, PIN Diodes, Spacers, Fiber Optic FC Connectors, Fiber Optic Modulators, RF N Connectors, Variable Inductors, XO, Clock, Digital Transmission Interfaces, Military Circular Connectors, Cellular Telephone Circuits, Insulated Gate Bipolar Transistors, Non Gated Switches, Other Consumer ICs, Power Bipolar Transistors, Fixed Capacitors, Network Interfaces, Ceramic Filters, Optocoupler - Trigger Device Outputs, RF/Microwave Detectors, Fiber Optic Receivers, SMPS Transformers, RF/Microwave Switches, Nuts, Fiber Optic Attenuators, Arithmetic Circuits, Noise Generators, RF MCX/MMCX Connectors, Nut Plates, Receiver ICs, Multiplexer/Demultiplexers, Power Field-Effect Transistors, Fixed Positive Multiple Output LDO Regulators, Array/Network Resistors, D Type Connectors, Clock ICs, Inserts, RF/Microwave Splitter/Combiners, Automotive Circuits, Special Relays, Rotary Switches, Isolation Amplifiers, Current Regulator Diodes, Special Capacitors, Graphics Processors, Other Fiber Optics, Slide Switches, XO, Sine, Noise Suppression ICs, Military Connector Accessories, Headers and Edge Type Connectors, Analog Waveform Generation Functions, EEPROMs, Fiber Optic Wavelength Division Mux/Demux, Fiber Optic SC Connectors, Microwave Mixer Diodes, Digital Signal Processors, Tuner ICs, Other Amplifiers, Fiber Optic Transceivers, Microwave Special Purpose Diodes, Current Sense Transformers, Power/Mains Transformers, Spacers, Other Passive Filters, MASK ROMs, RF SMC/SSMC Connectors, Cordless Telephone ICs, Fiber Optic ST Connectors, Optocoupler - Photocell Outputs, Analog Transmission Interfaces, Inserts, Analog Special Function Converters, Sockets and Chip Carriers, Rocker Switches, Stabistor Diodes, Voltage Controlled Clock SAW Oscillators, RF/Microwave Mixers, Other Telecom ICs, Fiber Optic Amplifiers, Rectifier Diodes, RF/Microwave Attenuators, Gated Switches, Heat Sinks, Wires, Fuses, Math Processors, Toggle Switches, RF/Microwave DC Blocks, Programmable Unijunction Transistors, Other Transformers, Telecom Filters, RF Power Field-Effect Transistors, RF SMB/SSMB Connectors, Telecom Signaling Circuits, Posts, VCXO, Clock, Silicon Surge Protectors, DSP Peripherals, Switching Regulator or Controllers, Telecom Protection Circuits, Tubular Filters, TCVCXO, Sine, Solid State Relays, RF/Microwave Terminations, Step Recovery Diodes, LED Displays, Bolts, Peripheral Drivers, Audio Synthesizer ICs, RF UHF Connectors, Wires, RF BNC Connectors, Fiber Optic Biconic Connectors, MOS Controlled Thyristors, Displays, Motion Control Electronics, Fixed Mixed Multiple Output Standard Regulators, RF/Microwave Antennas, TCXO, Sine, Slotted Switch - Transistor Outputs, Rivets, Fiber Optic Detectors, Tuned Gunn Oscillators, Fixed/Adjustable Negative Single Output LDO Regulators, Other Relays, Deflection ICs, Other RF Connectors, PLL or Frequency Synthesis Circuits, RF/Microwave Couplers, Washers, Pins Springs, Photo Transistors, Fixed DRO/CRO, Other Resistors, Snaps, RF/Microwave Limiters, DMA Controllers, Color Signal Converters, Current Transformers, Other Diodes, IF Transformers, General Purpose Filters, Clock Drivers, Knobs, Photo Diodes, Array/Network Capacitors, Position Converters, Microcontrollers, Power Supply Modules, Fixed Clock SAW Oscillators, Varactors, Fiber Optic Transmitters, Special Switches, Fiber Optic Switches, Timers or RTCs, Fusible Resistors, Slotted Switch - Logic Outputs, Tuned DRO/CRO, Bolts, Teletext ICs, RF/Microwave Up/Down Converters, Optical Position Encoders, Linear Position Sensors, Key and Key Seats, Variable Capacitors, Other Memory ICs, Non-linear Resistors, Magnetic Field Sensors, Unijunction Transistors, Other Rectangular Connectors, Other Interface ICs, Fixed Negative Single Output LDO Regulators, Batteries, Silicon Controlled Switches, LCD Displays, Adjustable Positive Multiple Output Standard Regulators, RF Twinax/Triax/Quadax Connectors, RF/Microwave Modulator/Demodulators, Interrupt Controllers, Circular Adapters, Fixed Positive Single Output Standard Regulators, RF Power Bipolar Transistors, YIG Tuned Oscillators, Codecs, Inverter Transformers, Optoelectronic Accessories, Decoder/Drivers, RF Small Signal Field-Effect Transistors, Other Trigger Devices, Microprocessor Chipsets, Comparators, RF Small Signal Bipolar Transistors, Optocoupler - Transistor Outputs, Fiber Optic Filters, Nuts, Fixed Negative Single Output Standard Regulators, Data Line Filters, Adjustable Positive Single Output LDO Regulators, Other Oscillators, SIDACs, Fixed Mixed Multiple Output LDO Regulators, Rectangular Adapters, Small Signal Bipolar Transistors, Image Sensors, Power/Signal Relays, Bus Driver/Transceivers, Infrared Sensors, DIP Switches, RF Transformers, Digital Potentiometers, Sample and Hold Circuits, EPROMs, DRAMs, Terminals and Terminal Blocks, Display Drivers, SAW Filters, System Interface Logic ICs, Memory Management Units, Heat Shrinks, Telecom and Datacom Connectors, Microprocessors, Power Connectors, Keypad Switches, Analog to Digital Converters, Fixed Positive Single Output LDO Regulators, Signal Separator ICs, Fiber Optic SMA Connectors, Ceramic Resonators, Voltage References, Reed Switches, Limited Part Number Data, Other Optoelectronics, Bushings, Parallel IO Ports, Flash Memories, Crystal Filters, Secondary Storage Controllers, TCXO, Clock, Temperature Sensors, Fixed/Adjustable Negative Single Output Standard Regulators, Grommets, RF/Microwave Amplifiers, Memory Controllers, MOSFET Drivers, Programmable Logic Devices, Tunable Filters, RF C Connectors, Resistor/Capacitor Networks, Screws, OCXO, Sine, Transient Suppressors, Instrumentation Amplifiers, Cavity Oscillators, Other Capacitors
+  
+  ## Package and Pin Information:
+  - **package**: Physical package type identifier (e.g., PDIP, PLCC, QFP). There may be multiple packages per component
+    
+    Available packages: ACY, ADFP, ADIP, AFQFP, ALF, APGA, AQCCJ, AQCCN, AQFF, AQFP, AQIP, ASDIP, ASOJ, ASOP, ATSOP, ATSOP1, ATSOP2, AWSDIP, BCC, BCS, BCY, BFM, BGA, BLFQFP, BMA, BQFP, CAN, CAN8,.2, CARD, CGA, CHIP, CHIP BIZ, CHIP CARRIER, CSP, DDPAK, DFM, DFN, DFO, DFP, DFP-14, DHVQFN, DIE, DIMM, DIP, DISC, DMA, DMS, DSBGA, DSO, DSS, EDB, ELF, FBGA, FCBGA, FLATPACK, FINE PITCH, FLGA, FLIPCHIP, FM, FQFP, GDFP, GQFF, GQFP, HBCC, HBGA, HCGA, HDFM, HDFP, HDIP, HFBGA, HFQFP, HFVSON, HGFQFF, HGQFF, HIP, HIPGA, HLBGA, HLFBGA, HLFLGA, HLFQFP, HLGA, HLQCCN, HLQFP, HLSOF, HLSON, HLSOP, HLSSOP, HPGA, HQCCJ, HQCCN, HQFF, HQFP, HQIP, HSDIP, HSIP, HSLOP, HSOF, HSOI, HSON, HSOP, HSSO, HSSOP, HSZIP, HTFLGA, HTFQFP, HTQFP, HTSON, HTSOP, HTSSOP, HUQCCN, HUSON, HUSSON, HVBCC, HVFLGA, HVFQFP, HVQCCN, HvQCCN, HVQFP, HVSOF, HVSON, HVSOP, HVSSOF, HVSSON, HVSSOP, HWQCC, HWQCCN, HWSON, HXQCCN, HXSON, HXSSON, HZIP, IBGA, IPGA, LBGA, LCC20, LFBGA, LFLGA, LFQFP, LGA, LLGA, LQFI, LQFP, LSOC, LSOF, LSOJ, LSON, LSOP, LSSON, LSSOP, MODEL, MODULE, NFBGA, PACKAGE, PGA, QCC, QCCC, QCCJ, QCCL, QCCN, QFF, QFI, QFM, QFN, QFP, QFP-24, QIP, QMA, QSS, QUC, RADIAL, SC-63, SC-98, SDIP, SFM, SFO, SIMM, SIP, SMA, SMD, SOC, SOC/SOD-15, SOF, SOI, SOIC, SOJ, SOJ-I, SOL, SON, SOP, SOP-20, SOP-24, SOS, SOT-223, SOT-23, SOT-89, SPGA, SSIP, SSO, SSOP, SSOP-20, SSOP-24, SSS, SZIP, TBGA, TFBGA, TFLGA, TFQFP, TLGA, TMA, TO-100, TO-126, TO-18, TO-2, TO-202, TO-206, TO-220, TO-226, TO-23, TO-237, TO-243, TO-247, TO-251, TO-252, TO-254, TO-257, TO-258, TO-262, TO-263, TO-3, TO-39, TO-46, TO-5, TO-50, TO-52, TO-66, TO-8, TO-92, TO-96, TO-99, TQCCN, TQFP, TSOC, TSOF, TSOJ, TSON, TSOP, TSOP1, TSOP1-R, TSOP2, TSOP2-R, TSSOP, TSSOP-20, TSSOP-24, UBCC, UBGA, UFBGA, UFM, UNSPECIFIED, UQCCN, USOF, USON, USSON, UUC, VBCC, VBGA, VFBGA, VFFBGA, VFLGA, VFQFN, VIBGA, VLCC, VLGA, VQCCN, VQFP, VSOC, VSOF, VSON, VSOP, VSSOF, VSSON, VSSOP, WAFER, WBGA, WDFP, WDIP, WFBGA, WFLGA, WLCSP, WLLGA, WPGA, WQCCJ, WQCCN, WQFF, WQFN, WQFP, WSDIP, WSON, WSOP, XCY, XFBGA, XFM, XFO, XMA, xma, XQCCN, XSON, XSS, XXS, ZFM, ZIP, zma, ZMA
+  
+  For each package, extract:
+  - **pin number**: The physical pin number on the package
+  - **pin symbol**: The electrical symbol or signal name (may include multiple functions separated by backslashes)
+  - **pin type**: The electrical function - Input, Output, Input/Output, Power Supply, Ground, or Empty
+  - **pin description**: Human-readable explanation of the pins functional purpose
+  
+  # Output Format
+  Return results as a JSON object with this structure:
+  
+  {
+    "parts": [
+      {
+        "part_number": "AZ3267",
+        "generic_part_number": "AZ3267",
+        "manufacturer_name": "ARIZONA MICROTEK INC",
+        "manufacturer_part_description": "2.5Gbps Transimpedance Amplifier",
+        "eu_rohs_compliant": 0,
+        "category": "Other Telecom ICs"
+      }
+    ],
+    "packages": [
+      {
+        "package": "PDIP",
+        "pins": [
+          {
+            "number": 1,
+            "symbol": "RESET",
+            "type": "Input",
+            "description": "RESET"
+          },
+          {
+            "number": 2,
+            "symbol": "DSTo",
+            "type": "Output",
+            "description": "Data ST-BUS"
+          }
+        ]
+      }
+    ]
+  }
+  
+  # Instructions
+  1. If any required field cannot be found in the datasheet, use null for that field
+  2. Use manufacturer exact terminology and specifications
+  3. Preserve numerical values with their units
+  4. Ensure all JSON is properly formatted and valid
+  5. Extract all available packages and their complete pin configurations
+  
+  **Document to analyze**:
+
+RESPONSE_FORMAT: |
+  {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "datasheet_extraction",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "part_number": {"type": ["string", "null"]},
+                "generic_part_number": {"type": ["string", "null"]},
+                "manufacturer_name": {"type": ["string", "null"]},
+                "manufacturer_part_description": {"type": ["string", "null"]},
+                "eu_rohs_compliant": {
+                  "type": ["integer", "null"],
+                  "enum": [0, 1, null]
+                },
+                "category": {"type": ["string", "null"]}
+              },
+              "required": ["part_number"],
+              "additionalProperties": false
+            }
+          },
+          "packages": {
+            "type": "array",
+            "description": "An array containing multiple package configurations for an electronic component",
+            "items": {
+              "type": "object",
+              "properties": {
+                "package": {
+                  "type": ["string", "null"]
+                },
+                "pins": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "number": {
+                        "type": ["integer", "null"]
+                      },
+                      "symbol": {
+                        "type": ["string", "null"]
+                      },
+                      "type": {
+                        "type": ["string", "null"]
+                      },
+                      "description": {
+                        "type": ["string", "null"]
+                      }
+                    },
+                    "required": ["number"],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": ["package"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["parts", "packages"],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  }
+AGENT_BRICKS_ENDPOINT: "kie-f84a7d19-endpoint"
+FIGURE_CLASSIFICATION_PROMPT: |
+  Classify the following description into ONE of these categories:
+
+  **package_circuits_diagram**: Package diagrams with pin information, IC pinouts, chip packages, or component footprints
+  **circuit_schematic**: Circuit components (resistors, capacitors, transistors, diodes, ICs), circuit connections, nodes, wiring, electronic signals, voltages, currents, circuit schematics, layouts, topologies, power supplies, amplifiers, filters, or other electronic systems
+  **functional_block_diagram**: Block diagrams showing system architecture, signal flow between functional blocks, or high-level electronic system organization
+  **charts_graphs**: Charts, graphs, plots with x-axis and y-axis, data visualizations, histograms, or statistical diagrams
+  **logo**: Company logos, brand logos, or corporate identity marks
+  **other**: Flowcharts, software architecture, code, non-electronic diagrams, or unrelated topics
+
+  Respond with ONLY the category name.
+
+  Text to classify:
+FIGURE_PROMPT: |
+  You are an expert hardware engineer analyzing semiconductor package diagrams. Extract detailed pin information from this chip diagram.
+
+  **Task**: Create a comprehensive pin mapping table with the following information:
+
+  ### Required Information
+  - **Pin Number**: Exact pin number as labeled on the diagram
+  - **Pin Symbol**: symbol, name, or label shown on the pin (e.g. RESET, D1, CLK, etc)
+
+  ### Output Format
+  Present the information as a markdown table:
+
+  | Pin # | Pin Symbol |
+  |-------|----------|
+  | 1     | RESET    | 
+  | 2     | D1       |
+  | 3     | D2       |
+
+  ### Additional Instructions
+  - If pin numbers are not visible, use physical position ordering (clockwise from pin 1)
+  - Identify any special markings: pin 1 indicator (dot, notch, chamfer)
+  - Preserve exact capitalization and naming from the diagram
+  - if there are multiple packages in the diagram, create a table for each package
+
+  Only respond with the markdown table. Do not include any additional text or explanations.
+  If the image does not contain a chip package diagram with pin information, respond with: "NO PIN INFORMATION"
