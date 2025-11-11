@@ -57,12 +57,12 @@ text_stream = (
     .filter(col("content").isNotNull())
 )
 
+with open("config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
 # Extract structured data using ai_query
 if agent_choice == "ai_query":
     print("📋 Using ai_query for structured data extraction...")
-    with open("config.yaml", "r") as f:
-        config = yaml.safe_load(f)
-
     print(f"🤖 LLM Model: {config['LLM_MODEL']}")
     structured_df = (
         text_stream.withColumn(
@@ -87,6 +87,7 @@ if agent_choice == "ai_query":
     )
 elif agent_choice == "agent_bricks":
     print("🧱 Using agent_bricks for structured data extraction...")
+    print(f"🤖 AGENT_BRICKS_ENDPOINT: {config['AGENT_BRICKS_ENDPOINT']}")
     structured_df = (
         text_stream.withColumn(
             "extracted_entities",
