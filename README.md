@@ -5,6 +5,7 @@ Production-ready examples demonstrating incremental document processing workflow
 ## Workflows
 
 ### 1. [Unstructured Information Extraction Workflow](./unstructured_ie_workflow)
+
 A streamlined 4-stage pipeline for extracting structured data from documents:
 - **Parse** PDFs/images with `ai_parse_document`
 - **Extract** clean text content
@@ -14,6 +15,8 @@ A streamlined 4-stage pipeline for extracting structured data from documents:
 **Best for**: Information extraction, document classification, entity recognition, financial data extraction
 
 **Key features**: JSONL export, CLI workflow runner with file management, serverless compute, optional cleanup stage
+
+![Information Extraction Workflow Architecture](./images/ie_workflow.png)
 
 ### 2. [Unstructured Knowledge Base Workflow](./unstructured_data_knowledge_base_workflow)
 A comprehensive 9-stage pipeline for creating searchable knowledge bases:
@@ -27,6 +30,8 @@ A comprehensive 9-stage pipeline for creating searchable knowledge bases:
 **Best for**: RAG applications, knowledge bases, multi-modal document understanding, technical documentation processing
 
 **Key features**: Diagram extraction, content chunking, visual enrichment, foreachBatch processing
+
+![Knowledge Base Workflow Architecture](./images/knowledge_base_workflow.png)
 
 ## Architecture
 
