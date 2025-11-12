@@ -1,6 +1,4 @@
-# LLM_MODEL: "databricks-claude-sonnet-4"
-#LLM_MODEL: "databricks-gpt-oss-120b"
-LLM_MODEL: "databricks-gpt-5"
+LLM_MODEL: "databricks-claude-sonnet-4"
 #LLM_MODEL: "databricks-gpt-5-mini"
 PROMPT: | 
   You are an expert financial document analyzer. Extract bond information from the provided text. Focus on identifying CUSIP numbers and their associated attributes.
@@ -61,7 +59,7 @@ RESPONSE_FORMAT: |
                 "called_amount": {"type": "string"},
                 "outstanding_amount": {"type": "string"}
               },
-              "required": ["cusip_no"],
+              "required": ["cusip_no", "call_date", "redemption_reason", "maturity_date", "current_principal", "called_amount", "outstanding_amount"],
               "additionalProperties": false
             }
           }

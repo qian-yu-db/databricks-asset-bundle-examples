@@ -82,8 +82,7 @@ if agent_choice == "ai_query":
                     ),
                     responseFormat => '{config["RESPONSE_FORMAT"]}',
                     modelParameters => named_struct(
-                        'max_tokens', 5000,
-                        'temperature', 0.0
+                        'max_tokens', 5000
                     )
                 )
             """),
