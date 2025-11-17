@@ -194,3 +194,7 @@ mlartifacts/
 # raw data
 pdfs/
 jsonl/
+
+.claude/
+.claude
+CLAUDE.md
