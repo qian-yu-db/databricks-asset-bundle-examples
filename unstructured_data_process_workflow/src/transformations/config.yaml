@@ -18,7 +18,7 @@ SEGMENT_PROMPT: |
           "item_number": 1,
           "type": "CV" or "credential",
           "person_name": "name if CV",
-          "email": "email if CV",
+          "email": "email",
           "title": "brief title",
           "text": "all of the associated text for this entity"
       }
