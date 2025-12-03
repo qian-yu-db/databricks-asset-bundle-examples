@@ -15,6 +15,7 @@ UPLOAD_PDFS=false
 DOWNLOAD_JSONL=false
 PDFS_DIR="./pdfs"
 JSONL_DIR="./jsonl"
+VAR_ARGS=()
 
 # Color codes for output
 RED='\033[0;31m'
@@ -171,6 +172,7 @@ OPTIONS:
     --pdfs-dir DIR          Local directory containing PDF files (default: ./pdfs)
     --download-jsonl        Download JSONL files from Databricks volume to local directory
     --jsonl-dir DIR         Local directory to save JSONL files (default: ./jsonl)
+    --var KEY=VALUE        Override DAB variable (can be used multiple times)
     --help                  Show this help message
 
 EXAMPLES:
@@ -180,6 +182,8 @@ EXAMPLES:
     $0 --skip-validation --profile my-profile   # Skip validation step
     $0 --upload-pdfs --download-jsonl          # Full workflow with file management
     $0 --upload-pdfs --pdfs-dir ./documents --download-jsonl --jsonl-dir ./results
+    $0 --var agent_choice=agent_bricks          # Override DAB variable
+    $0 --var agent_choice=ai_query --var partition_count=10  # Multiple variables
 
 WORKFLOW:
     1. Bundle validation (optional)
@@ -230,6 +234,10 @@ while [[ $# -gt 0 ]]; do
             JSONL_DIR="$2"
             shift 2
             ;;
+        --var)
+            VAR_ARGS+=("--var" "$2")
+            shift 2
+            ;;
         --help|-h)
             show_usage
             exit 0
@@ -270,10 +278,18 @@ if [[ "$DOWNLOAD_JSONL" == true ]]; then
     print_info "JSONL Download: $OUTPUT_VOLUME_PATH → $JSONL_DIR"
 fi
 
+# Show variable overrides if any
+if [[ ${#VAR_ARGS[@]} -gt 0 ]]; then
+    print_info "Variable overrides:"
+    for ((i=1; i<${#VAR_ARGS[@]}; i+=2)); do
+        print_info "  - ${VAR_ARGS[$i]}"
+    done
+fi
+
 # Step 1: Validate bundle (unless skipped or using existing job)
 if [[ "$SKIP_VALIDATION" == false && -z "$JOB_ID" ]]; then
     print_info "Validating Databricks asset bundle..."
-    if databricks bundle validate $PROFILE_ARG; then
+    if databricks bundle validate $PROFILE_ARG "${VAR_ARGS[@]}"; then
         print_success "Bundle validation completed successfully!"
     else
         print_error "Bundle validation failed!"
@@ -286,7 +302,7 @@ fi
 # Step 2: Deploy bundle (unless skipped or using existing job)
 if [[ "$SKIP_DEPLOYMENT" == false && -z "$JOB_ID" ]]; then
     print_info "Deploying Databricks asset bundle to '$TARGET' target..."
-    if databricks bundle deploy --target $TARGET $PROFILE_ARG; then
+    if databricks bundle deploy --target $TARGET $PROFILE_ARG "${VAR_ARGS[@]}"; then
         print_success "Bundle deployed successfully to '$TARGET' target!"
     else
         print_error "Bundle deployment failed!"
@@ -321,7 +337,7 @@ if [[ -n "$JOB_ID" ]]; then
 else
     # Use bundle run command
     print_info "Launching workflow via bundle..."
-    if databricks bundle run ai_parse_document_workflow --target $TARGET $PROFILE_ARG; then
+    if databricks bundle run ai_parse_document_workflow --target $TARGET $PROFILE_ARG "${VAR_ARGS[@]}"; then
         print_success "Workflow completed successfully!"
     else
         print_error "Workflow execution failed!"

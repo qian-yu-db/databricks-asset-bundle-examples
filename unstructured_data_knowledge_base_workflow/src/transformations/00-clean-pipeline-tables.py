@@ -110,12 +110,57 @@ import shutil
 import os
 
 
-def ensure_directories_exist():
-    """Ensure required directories exist, create if they don't"""
+def ensure_volume_exists(volume_name):
+    """Ensure a Unity Catalog volume exists, create if it doesn't"""
+    try:
+        # Check if volume exists by trying to describe it
+        spark.sql(f"DESCRIBE VOLUME {catalog}.{schema}.{volume_name}")
+        print(f"  ℹ️  Volume already exists: {catalog}.{schema}.{volume_name}")
+        return True
+    except Exception:
+        # Volume doesn't exist, try to create it
+        try:
+            spark.sql(
+                f"CREATE VOLUME IF NOT EXISTS {catalog}.{schema}.{volume_name}"
+            )
+            print(f"  ✅ Created volume: {catalog}.{schema}.{volume_name}")
+            return True
+        except Exception as e:
+            print(
+                f"  ❌ Failed to create volume {catalog}.{schema}.{volume_name}: {str(e)}"
+            )
+            return False
 
-    print("📁 Checking and creating required directories...")
+
+def ensure_directories_exist():
+    """Ensure required volumes and directories exist, create if they don't"""
+
+    print("📁 Checking and creating required volumes and directories...")
+
+    # Extract volume names from paths
+    # e.g., "/Volumes/fins_genai/unstructured_documents/ai_parse_document_workflow/outputs/"
+    #       -> "ai_parse_document_workflow"
+    # e.g., "checkpoints/ai_parse_document_workflow" -> "checkpoints"
+    volumes_to_check = set()
+
+    # Extract volume from output_volume_path
+    if output_volume_path.startswith("/Volumes/"):
+        path_parts = output_volume_path.split("/")
+        if len(path_parts) >= 5:
+            output_volume_name = path_parts[4]  # /Volumes/catalog/schema/volume/...
+            volumes_to_check.add(output_volume_name)
+
+    # Extract checkpoint volume name from checkpoint_base_path
+    checkpoint_volume = checkpoint_base_path.split("/")[0]
+    volumes_to_check.add(checkpoint_volume)
+
+    # Ensure all required volumes exist
+    print("\n🗄️  Checking Unity Catalog volumes...")
+    for vol in volumes_to_check:
+        ensure_volume_exists(vol)
 
     # Define all required directories
+    print("\n📂 Creating subdirectories...")
     required_dirs = [
         output_volume_path,
         cropped_images_volume_path,
@@ -132,7 +177,7 @@ def ensure_directories_exist():
         except Exception as e:
             print(f"  ❌ Failed to create directory {directory}: {str(e)}")
 
-    print("📁 Directory check completed!\n")
+    print("\n📁 Volume and directory check completed!\n")
 
 
 def cleanup_pipeline():

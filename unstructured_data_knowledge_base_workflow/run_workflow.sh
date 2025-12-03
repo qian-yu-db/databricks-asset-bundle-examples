@@ -11,6 +11,7 @@ TARGET="dev"
 SKIP_VALIDATION=false
 SKIP_DEPLOYMENT=false
 JOB_ID=""
+VAR_ARGS=()
 
 # Color codes for output
 RED='\033[0;31m'
@@ -47,6 +48,7 @@ OPTIONS:
     --skip-validation          Skip bundle validation step
     --skip-deployment          Skip bundle deployment step
     --job-id JOB_ID           Job ID to run (skip deployment and use existing job)
+    --var KEY=VALUE           Override DAB variable (can be used multiple times)
     --help                     Show this help message
 
 EXAMPLES:
@@ -61,6 +63,13 @@ EXAMPLES:
 
     # Skip validation and deployment (use existing deployment)
     $0 --skip-validation --skip-deployment --profile my-profile
+
+    # Override DAB variables on the fly
+    $0 --var clean_pipeline_tables=Yes
+    $0 --var clean_pipeline_tables=Yes --var partition_count=10
+
+    # Clean tables and run with custom settings
+    $0 --profile my-profile --var clean_pipeline_tables=Yes --var table_prefix=custom_workflow
 
 WORKFLOW TASKS:
     1. clean_pipeline_tables              - Clean/reset pipeline tables (run separately)
@@ -110,6 +119,10 @@ while [[ $# -gt 0 ]]; do
             JOB_ID="$2"
             shift 2
             ;;
+        --var)
+            VAR_ARGS+=("--var" "$2")
+            shift 2
+            ;;
         --help|-h)
             show_usage
             exit 0
@@ -146,12 +159,21 @@ print_info "  • Profile: ${PROFILE:-default}"
 print_info "  • Target: $TARGET"
 print_info "  • Catalog: $CATALOG"
 print_info "  • Schema: $SCHEMA"
+
+# Show variable overrides if any
+if [[ ${#VAR_ARGS[@]} -gt 0 ]]; then
+    print_info "  • Variable overrides:"
+    for ((i=1; i<${#VAR_ARGS[@]}; i+=2)); do
+        print_info "    - ${VAR_ARGS[$i]}"
+    done
+fi
+
 print_info "═══════════════════════════════════════════════════════════════════"
 
 # Step 1: Validate bundle (unless skipped or using existing job)
 if [[ "$SKIP_VALIDATION" == false && -z "$JOB_ID" ]]; then
     print_info "\n📋 Step 1: Validating Databricks asset bundle..."
-    if databricks bundle validate $PROFILE_ARG; then
+    if databricks bundle validate $PROFILE_ARG "${VAR_ARGS[@]}"; then
         print_success "Bundle validation completed successfully!"
     else
         print_error "Bundle validation failed!"
@@ -164,7 +186,7 @@ fi
 # Step 2: Deploy bundle (unless skipped or using existing job)
 if [[ "$SKIP_DEPLOYMENT" == false && -z "$JOB_ID" ]]; then
     print_info "\n🚀 Step 2: Deploying Databricks asset bundle to '$TARGET' target..."
-    if databricks bundle deploy --target $TARGET $PROFILE_ARG; then
+    if databricks bundle deploy --target $TARGET $PROFILE_ARG "${VAR_ARGS[@]}"; then
         print_success "Bundle deployed successfully to '$TARGET' target!"
     else
         print_error "Bundle deployment failed!"
@@ -192,7 +214,7 @@ else
     print_info "Launching workflow via bundle..."
     print_info "Job name: unstructured_document_knowledge_base_workflow"
 
-    if databricks bundle run unstructured_document_knowledge_base_workflow --target $TARGET $PROFILE_ARG; then
+    if databricks bundle run unstructured_document_knowledge_base_workflow --target $TARGET $PROFILE_ARG "${VAR_ARGS[@]}"; then
         print_success "Workflow completed successfully!"
     else
         print_error "Workflow execution failed!"

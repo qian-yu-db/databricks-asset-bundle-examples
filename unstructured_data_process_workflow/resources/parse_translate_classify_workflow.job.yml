@@ -1,0 +1,68 @@
+resources:
+  jobs:
+    parse_translate_classify_workflow:
+      name: parse_translate_classify_workflow
+
+      environments:
+        - environment_key: serverless_env
+          spec:
+            client: "3"
+
+      tasks:
+        - task_key: clean_pipeline_tables
+          environment_key: serverless_env
+          notebook_task:
+            notebook_path: ../src/transformations/00-clean-pipeline-tables.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              volume: ${var.volume}
+              table_prefix: ${var.table_prefix}
+              clean_pipeline_tables: ${var.clean_pipeline_tables}
+              checkpoint_base_path: ${var.checkpoint_base_path}
+
+        - task_key: parse_documents
+          environment_key: serverless_env
+          depends_on:
+            - task_key: clean_pipeline_tables
+          notebook_task:
+            notebook_path: ../src/transformations/01_parse_documents.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              volume: ${var.volume}
+              table_prefix: ${var.table_prefix}
+              partition_count: ${var.partition_count}
+              checkpoint_location: /Volumes/${var.catalog}/${var.schema}/${var.checkpoint_base_path}/01_parse_documents
+
+        - task_key: translate_content
+          depends_on:
+            - task_key: parse_documents
+          environment_key: serverless_env
+          notebook_task:
+            notebook_path: ../src/transformations/02_translate_content.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              table_prefix: ${var.table_prefix}
+              checkpoint_location: /Volumes/${var.catalog}/${var.schema}/${var.checkpoint_base_path}/02_translate_content
+
+        - task_key: segment_classify_transform
+          depends_on:
+            - task_key: translate_content
+          environment_key: serverless_env
+          notebook_task:
+            notebook_path: ../src/transformations/03_segment_classify_transform.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              table_prefix: ${var.table_prefix}
+              checkpoint_location_segment: /Volumes/${var.catalog}/${var.schema}/${var.checkpoint_base_path}/03_segment_classify
+              checkpoint_location_transform: /Volumes/${var.catalog}/${var.schema}/${var.checkpoint_base_path}/04_transform_records
+
+      max_concurrent_runs: 1
+
+      # Optional: Add a schedule to run the workflow periodically
+      # schedule:
+      #   quartz_cron_expression: "0 0 * * * ?"  # Run daily at midnight
+      #   timezone_id: "UTC"

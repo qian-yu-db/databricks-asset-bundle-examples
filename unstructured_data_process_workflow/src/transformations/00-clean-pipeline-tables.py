@@ -2,44 +2,32 @@
 # MAGIC %md
 # MAGIC # Clean Pipeline Tables and Checkpoints
 # MAGIC
-# MAGIC This notebook provides a utility to clean up all tables and checkpoints created by the document processing pipeline.
+# MAGIC This notebook provides a utility to clean up all tables and checkpoints created by the parse-translate-classification pipeline.
 
 # COMMAND ----------
 
 # Get parameters
 dbutils.widgets.text("catalog", "fins_genai", "Catalog name")
-dbutils.widgets.text("schema", "unstructured_documents", "Schema name")
-dbutils.widgets.text(
-    "output_volume_path",
-    "/Volumes/fins_genai/unstructured_documents/ai_parse_document_workflow/outputs/",
-    "Output volume path",
-)
+dbutils.widgets.text("schema", "genai_hackathon", "Schema name")
+dbutils.widgets.text("volume", "docs_for_redaction", "Volume name")
+dbutils.widgets.text("table_prefix", "redaction_workflow", "Table prefix")
 dbutils.widgets.dropdown(
     name="clean_pipeline_tables",
     choices=["No", "Yes"],
     defaultValue="No",
     label="Clean all pipeline tables and checkpoints?",
 )
-dbutils.widgets.text("raw_table_name", "parsed_documents_raw", "Raw table name")
-dbutils.widgets.text(
-    "content_table_name", "parsed_documents_content", "Content table name"
-)
-dbutils.widgets.text(
-    "structured_table_name", "parsed_documents_structured", "Structured table name"
-)
 dbutils.widgets.text(
     "checkpoint_base_path",
-    "checkpoints/ai_parse_document_workflow",
+    "checkpoints/parse_translate_classify_workflow",
     "Checkpoint base path",
 )
 
 catalog = dbutils.widgets.get("catalog")
 schema = dbutils.widgets.get("schema")
-output_volume_path = dbutils.widgets.get("output_volume_path")
+volume = dbutils.widgets.get("volume")
+table_prefix = dbutils.widgets.get("table_prefix")
 clean_pipeline = dbutils.widgets.get("clean_pipeline_tables")
-raw_table_name = dbutils.widgets.get("raw_table_name")
-content_table_name = dbutils.widgets.get("content_table_name")
-structured_table_name = dbutils.widgets.get("structured_table_name")
 checkpoint_base_path = dbutils.widgets.get("checkpoint_base_path")
 
 # COMMAND ----------
@@ -81,32 +69,22 @@ def ensure_directories_exist():
 
     print("📁 Checking and creating required volumes and directories...")
 
-    # Extract volume names from paths
-    # e.g., "/Volumes/fins_genai/unstructured_documents/ai_parse_document_workflow/outputs/"
-    #       -> "ai_parse_document_workflow"
-    # e.g., "checkpoints/ai_parse_document_workflow" -> "checkpoints"
-    volumes_to_check = set()
-
-    # Extract volume from output_volume_path
-    if output_volume_path.startswith("/Volumes/"):
-        path_parts = output_volume_path.split("/")
-        if len(path_parts) >= 5:
-            output_volume_name = path_parts[4]  # /Volumes/catalog/schema/volume/...
-            volumes_to_check.add(output_volume_name)
-
     # Extract checkpoint volume name from checkpoint_base_path
+    # e.g., "checkpoints/parse_translate_classify_workflow" -> "checkpoints"
     checkpoint_volume = checkpoint_base_path.split("/")[0]
-    volumes_to_check.add(checkpoint_volume)
 
     # Ensure all required volumes exist
     print("\n🗄️  Checking Unity Catalog volumes...")
-    for vol in volumes_to_check:
+    volumes_to_check = [volume, checkpoint_volume]
+
+    for vol in set(volumes_to_check):  # Use set to avoid duplicates
         ensure_volume_exists(vol)
 
     # Define all required directories
     print("\n📂 Creating subdirectories...")
     required_dirs = [
-        output_volume_path,
+        f"/Volumes/{catalog}/{schema}/{volume}/original",
+        f"/Volumes/{catalog}/{schema}/{volume}/images",
         f"/Volumes/{catalog}/{schema}/{checkpoint_base_path}",
     ]
 
@@ -130,16 +108,18 @@ def cleanup_pipeline():
 
     # Define all tables created by the pipeline
     tables_to_drop = [
-        raw_table_name,
-        content_table_name,
-        structured_table_name,
+        f"{table_prefix}_raw_parsed_files",
+        f"{table_prefix}_translated_content",
+        f"{table_prefix}_parsed_content",
+        f"{table_prefix}_parsed_records",
     ]
 
     # Define all checkpoint locations
     checkpoint_paths = [
-        f"{checkpoint_base_path}/01_parse_documents",
-        f"{checkpoint_base_path}/02_extract_document_content",
-        f"{checkpoint_base_path}/03_extract_key_info",
+        f"/Volumes/{catalog}/{schema}/{checkpoint_base_path}/01_parse_documents",
+        f"/Volumes/{catalog}/{schema}/{checkpoint_base_path}/02_translate_content",
+        f"/Volumes/{catalog}/{schema}/{checkpoint_base_path}/03_segment_classify",
+        f"/Volumes/{catalog}/{schema}/{checkpoint_base_path}/04_transform_records",
     ]
 
     # Drop tables
@@ -164,29 +144,26 @@ def cleanup_pipeline():
         except Exception as e:
             print(f"  ❌ Failed to remove checkpoint {checkpoint_path}: {str(e)}")
 
-    # Clean any additional output directories (optional)
-    output_paths = [
-        f"{output_volume_path}",
-    ]
-
-    print("\n📁 Cleaning output directories...")
-    for output_path in output_paths:
-        try:
-            if os.path.exists(output_path):
-                # Only remove contents, not the directory itself
-                for item in os.listdir(output_path):
-                    item_path = os.path.join(output_path, item)
-                    if os.path.isdir(item_path):
-                        shutil.rmtree(item_path)
-                    else:
-                        os.remove(item_path)
-                print(f"  ✅ Cleaned output directory: {output_path}")
-            else:
-                print(f"  ℹ️  Output directory not found: {output_path}")
-        except Exception as e:
-            print(f"  ❌ Failed to clean output directory {output_path}: {str(e)}")
+    # Clean image directory
+    image_path = f"/Volumes/{catalog}/{schema}/{volume}/images"
+    print(f"\n📁 Cleaning image directory: {image_path}")
+    try:
+        if os.path.exists(image_path):
+            # Only remove contents, not the directory itself
+            for item in os.listdir(image_path):
+                item_path = os.path.join(image_path, item)
+                if os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+                else:
+                    os.remove(item_path)
+            print(f"  ✅ Cleaned image directory: {image_path}")
+        else:
+            print(f"  ℹ️  Image directory not found: {image_path}")
+    except Exception as e:
+        print(f"  ❌ Failed to clean image directory {image_path}: {str(e)}")
 
     print("\n🎉 Pipeline cleanup completed!")
+
 
 # COMMAND ----------
 
@@ -202,11 +179,11 @@ else:
         "ℹ️  Cleanup skipped. Set 'Clean all pipeline tables and checkpoints?' to 'Yes' to proceed."
     )
     print("\n📋 Tables that would be cleaned:")
-    print("  - parsed_documents_raw")
-    print("  - parsed_documents_content")
+    print(f"  - {table_prefix}_raw_parsed_files")
+    print(f"  - {table_prefix}_translated_content")
+    print(f"  - {table_prefix}_parsed_content")
+    print(f"  - {table_prefix}_parsed_records")
     print("\n🗂️  Checkpoint directories that would be cleaned:")
-    print(
-        "  - /Volumes/fins_genai/unstructured_documents/checkpoints/ai_parse_document_workflow/*"
-    )
-    print("\n📁 Output directories that would be cleaned:")
-    print("  - ", output_volume_path)
+    print(f"  - /Volumes/{catalog}/{schema}/{checkpoint_base_path}/*")
+    print("\n📁 Image directory that would be cleaned:")
+    print(f"  - /Volumes/{catalog}/{schema}/{volume}/images")

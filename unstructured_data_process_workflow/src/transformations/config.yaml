@@ -1,0 +1,30 @@
+# AI Configuration
+
+# LLM Models
+TRANSLATION_MODEL: "databricks-meta-llama-3-3-70b-instruct"
+CLASSIFICATION_MODEL: "databricks-claude-sonnet-4-5"
+
+# Prompts
+TRANSLATE_PROMPT: |
+  translate to english. Retain the original formatting, only translate.
+  Do not add any extra words before or after the original content - e.g. do not summarize what you are doing. and do not remove spacing/white spaces unneccessarily
+
+SEGMENT_PROMPT: |
+  Analyze this document and identify if it contains multiple CVs (resumes/curricula vitae) or customer success stories/credentials. Use the bounding boxes to help as this info often comes from slides, with CVs or creds grouped together in multiple text boxes.
+
+  For each distinct CV or credential found, return a JSON array with the following structure:
+  [
+      {
+          "item_number": 1,
+          "type": "CV" or "credential",
+          "person_name": "name if CV",
+          "email": "email if CV",
+          "title": "brief title",
+          "text": "all of the associated text for this entity"
+      }
+  ]
+
+  - If the document contains only one CV/credential, return an array with one item.
+  - If no CVs/credentials are found, return an empty array [].
+
+  Document content:
