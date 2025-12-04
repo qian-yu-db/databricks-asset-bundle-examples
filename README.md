@@ -18,7 +18,19 @@ A streamlined 4-stage pipeline for extracting structured data from documents:
 
 ![Information Extraction Workflow Architecture](./images/ie_workflow.png)
 
-### 2. [Unstructured Knowledge Base Workflow](./unstructured_data_knowledge_base_workflow)
+### 2. [Parse-Translate-Classify Workflow](./unstructured_data_process_workflow)
+
+A multi-lingual document processing pipeline for segmenting and classifying content:
+- **Parse** documents (PDF, PPTX, DOCX) with `ai_parse_document`
+- **Translate** content to English while preserving formatting
+- **Segment** and classify documents (CVs, credentials, resumes)
+- **Transform** into individual structured records
+
+**Best for**: Multi-lingual document processing, CV/resume extraction, credential verification, document segmentation
+
+**Key features**: Config-based LLM management (YAML), streaming pipeline with checkpointing, multi-format support, automatic volume creation
+
+### 3. [Unstructured Knowledge Base Workflow](./unstructured_data_knowledge_base_workflow)
 A comprehensive 9-stage pipeline for creating searchable knowledge bases:
 - **Parse** documents with bounding boxes and metadata
 - **Extract** text, elements, and page information
@@ -35,7 +47,7 @@ A comprehensive 9-stage pipeline for creating searchable knowledge bases:
 
 ## Architecture
 
-Both workflows use:
+All workflows use:
 - **Databricks Asset Bundles** for CI/CD and infrastructure-as-code
 - **Structured Streaming** with checkpointing for incremental processing
 - **Unity Catalog** for data governance
@@ -49,10 +61,15 @@ Both workflows use:
 databricks auth login --host https://your-workspace.cloud.databricks.com
 
 # Choose a workflow
-cd unstructured_ie_workflow  # or unstructured_data_knowledge_base_workflow
+cd unstructured_ie_workflow                      # Information extraction
+# cd unstructured_data_process_workflow          # Parse-translate-classify
+# cd unstructured_data_knowledge_base_workflow   # Knowledge base
 
-# Deploy and run (with file management)
-./run_workflow.sh --profile YOUR_PROFILE --upload-pdfs --download-jsonl
+# Deploy and run (examples)
+./run_workflow.sh --profile YOUR_PROFILE                        # Basic usage
+./run_workflow.sh --upload-pdfs --download-jsonl               # With file management (IE workflow)
+./run_workflow.sh --var clean_pipeline_tables=Yes              # Override variables
+./run_workflow.sh --var agent_choice=agent_bricks              # Custom configuration
 ```
 
 See individual workflow READMEs for detailed configuration and usage.
